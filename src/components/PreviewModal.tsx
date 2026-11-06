@@ -57,7 +57,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 p-4 backdrop-blur-sm dark:bg-black/80 dark:backdrop-blur-sm sm:p-6"
     >
       <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xl">
         {/* Modal Header */}

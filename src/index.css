@@ -154,16 +154,25 @@
 
 /* Checkerboard pattern for transparent PNG / WebP previews */
 .bg-checkerboard {
-  background-color: #18181b;
+  background-color: #ffffff;
   background-image:
-    linear-gradient(45deg, #27272a 25%, transparent 25%),
-    linear-gradient(-45deg, #27272a 25%, transparent 25%),
-    linear-gradient(45deg, transparent 75%, #27272a 75%),
-    linear-gradient(-45deg, transparent 75%, #27272a 75%);
+    linear-gradient(45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(-45deg, #e5e7eb 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e5e7eb 75%),
+    linear-gradient(-45deg, transparent 75%, #e5e7eb 75%);
   background-size: 16px 16px;
   background-position:
     0 0,
     0 8px,
     8px -8px,
     -8px 0;
+}
+
+html.dark .bg-checkerboard {
+  background-color: #18181b;
+  background-image:
+    linear-gradient(45deg, #27272a 25%, transparent 25%),
+    linear-gradient(-45deg, #27272a 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #27272a 75%),
+    linear-gradient(-45deg, transparent 75%, #27272a 75%);
 }
