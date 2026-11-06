@@ -1,0 +1,13 @@
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    /* Permanent dark theme: native scrollbars, spin buttons & form controls render dark. */
+    color-scheme: dark;
+  }
+
+  input[type='range'] {
+    accent-color: var(--color-indigo-500);
+    cursor: pointer;
+  }
+}
