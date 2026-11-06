@@ -45,7 +45,10 @@ export function getErrorMessage(err: unknown): string {
 /* -------------------------------------------------------------------------- */
 
 export const MIN_SCALE = 1;
+export const DEFAULT_MAX_SCALE = 100;
 export const MAX_SCALE = 200;
+export const MIN_MAX_WIDTH = 1;
+export const MAX_MAX_WIDTH = 16_384;
 export const MIN_QUALITY = 10;
 export const MAX_QUALITY = 100;
 
@@ -66,6 +69,44 @@ export function computeTargetDimensions(
     width: Math.max(1, Math.round(originalWidth * (percentage / 100))),
     height: Math.max(1, Math.round(originalHeight * (percentage / 100))),
   };
+}
+
+/**
+ * Calculates target dimensions for `PX` mode ("Max Width (px)") while preserving
+ * aspect ratio and ensuring images narrower than `maxWidth` are never upscaled
+ * beyond their native resolution.
+ */
+export function computeTargetDimensionsByMaxWidth(
+  originalWidth: number,
+  originalHeight: number,
+  maxWidth: number,
+): { width: number; height: number } {
+  const safeMaxWidth = Math.max(1, Math.round(maxWidth));
+  if (originalWidth <= safeMaxWidth) {
+    return {
+      width: Math.max(1, Math.round(originalWidth)),
+      height: Math.max(1, Math.round(originalHeight)),
+    };
+  }
+  const ratio = safeMaxWidth / originalWidth;
+  return {
+    width: safeMaxWidth,
+    height: Math.max(1, Math.round(originalHeight * ratio)),
+  };
+}
+
+/** Resolves output dimensions for either `%` scale mode or `PX` max-width mode. */
+export function resolveTargetDimensions(
+  originalWidth: number,
+  originalHeight: number,
+  settings: Pick<EncodeSettings, 'mode' | 'scale' | 'maxWidth'>,
+): { width: number; height: number } {
+  if (settings.mode === 'px') {
+    const maxWidth = clamp(settings.maxWidth, MIN_MAX_WIDTH, MAX_MAX_WIDTH);
+    return computeTargetDimensionsByMaxWidth(originalWidth, originalHeight, maxWidth);
+  }
+  const scale = clamp(settings.scale, MIN_SCALE, MAX_SCALE);
+  return computeTargetDimensions(originalWidth, originalHeight, scale);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -333,16 +374,16 @@ export interface ResizeOutput {
 }
 
 /**
- * Decodes `file`, resizes it by `settings.scale` percent with high-quality smoothing
- * (using multi-step halving when scaling below 50%) and encodes it to WebP at `settings.quality`.
+ * Decodes `file`, resizes it according to `settings` (`%` scale or `PX` max-width) with
+ * high-quality smoothing (using multi-step halving when scaling below 50%) and encodes it
+ * to WebP at `settings.quality`.
  */
 export async function resizeImageToWebP(file: Blob, settings: EncodeSettings): Promise<ResizeOutput> {
-  const scale = clamp(settings.scale, MIN_SCALE, MAX_SCALE);
   const quality = clamp(settings.quality, MIN_QUALITY, MAX_QUALITY) / 100;
 
   const decoded = await decodeImage(file);
   try {
-    const { width, height } = computeTargetDimensions(decoded.width, decoded.height, scale);
+    const { width, height } = resolveTargetDimensions(decoded.width, decoded.height, settings);
 
     if (width > MAX_CANVAS_SIDE || height > MAX_CANVAS_SIDE || width * height > MAX_CANVAS_AREA) {
       throw new ImageProcessingError(
@@ -399,10 +440,12 @@ export function formatPercentChange(change: number): string {
   return change > 0 ? `+${change}%` : `${change}%`;
 }
 
-/** "hero-banner.png" → "hero-banner.webp" | "hero-banner-50pct.webp". */
-export function buildOutputName(originalName: string, scale: number, appendSuffix: boolean): string {
+/** "hero-banner.png" → "hero-banner.webp" | "hero-banner-50pct.webp" | "hero-banner-1200px.webp". */
+export function buildOutputName(originalName: string, scaleOrSuffix: number | string, appendSuffix: boolean): string {
   const base = originalName.replace(/\.[^./\\]+$/, '').trim() || 'image';
-  return `${base}${appendSuffix ? `-${scale}pct` : ''}.webp`;
+  if (!appendSuffix) return `${base}.webp`;
+  const suffix = typeof scaleOrSuffix === 'number' ? `${scaleOrSuffix}pct` : scaleOrSuffix;
+  return `${base}-${suffix}.webp`;
 }
 
 /** Returns `name` or a "-1", "-2", … variant that is not yet in `used` (case-insensitive). */

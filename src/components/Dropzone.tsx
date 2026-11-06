@@ -99,7 +99,7 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
           <span className={`font-medium ${isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'}`}>
             {isDragging ? 'Drop to add images' : 'Add more images…'}
           </span>
-          <span className="hidden text-[var(--text-muted)] sm:inline">or drop files here</span>
+          <span className="hidden text-[var(--text-muted)] sm:inline">or drop files / Ctrl+V to paste</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
@@ -118,10 +118,10 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
                 isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
               }`}
             >
-              {isDragging ? 'Drop images to add them' : 'Drop images here or click to browse'}
+              {isDragging ? 'Drop images to add them' : 'Drop images here, click to browse, or press Ctrl+V'}
             </p>
             <p className="mt-1.5 text-xs tracking-[0.03em] text-[var(--text-muted)]">
-              PNG, JPEG, WebP or AVIF · single or bulk · processed locally, nothing is uploaded
+              PNG, JPEG, WebP or AVIF · single, bulk or clipboard paste · processed locally, nothing is uploaded
             </p>
           </div>
         </div>

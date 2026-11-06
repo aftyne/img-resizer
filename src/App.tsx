@@ -20,25 +20,47 @@ import {
 } from './utils/imageProcessor';
 import { ControlBar } from './components/ControlBar';
 import { Dropzone } from './components/Dropzone';
+import { PreviewModal } from './components/PreviewModal';
 import { QueueRow } from './components/QueueRow';
 
-const DEFAULT_SETTINGS: ProcessSettings = { scale: 50, quality: 80, appendSuffix: false };
+const DEFAULT_SETTINGS: ProcessSettings = {
+  mode: 'percent',
+  scale: 50,
+  maxWidth: 1200,
+  quality: 80,
+  appendSuffix: false,
+};
 
 let idCounter = 0;
+let pasteCounter = 0;
 /** Works in non-secure contexts too (crypto.randomUUID requires HTTPS/localhost). */
 const createId = () => `${Date.now().toString(36)}-${(idCounter++).toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
+const MIME_EXTENSION_MAP: Record<string, string> = {
+  'image/png': 'png',
+  'image/jpeg': 'jpg',
+  'image/webp': 'webp',
+  'image/avif': 'avif',
+  'image/gif': 'gif',
+};
+
+const GENERIC_CLIPBOARD_NAMES = new Set(['image.png', 'image.jpg', 'image.jpeg', 'image.webp', 'image.avif', 'blob']);
+
 function isOutdated(item: QueueItem, settings: EncodeSettings): boolean {
-  return (
-    item.status === 'done' &&
-    item.result !== undefined &&
-    (item.result.scale !== settings.scale || item.result.quality !== settings.quality)
-  );
+  if (item.status !== 'done' || !item.result) return false;
+  if (item.result.mode !== settings.mode || item.result.quality !== settings.quality) return true;
+  return settings.mode === 'px'
+    ? item.result.maxWidth !== settings.maxWidth
+    : item.result.scale !== settings.scale;
 }
 
 function revokeItemUrls(item: QueueItem) {
   if (item.previewUrl) URL.revokeObjectURL(item.previewUrl);
   if (item.result) URL.revokeObjectURL(item.result.url);
+}
+
+function getResultSuffix(result: NonNullable<QueueItem['result']>): number | string {
+  return result.mode === 'px' ? `${result.maxWidth}px` : result.scale;
 }
 
 export default function App() {
@@ -49,6 +71,7 @@ export default function App() {
   const [activeJobs, setActiveJobs] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
   const [isDark, setIsDark] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('theme');
@@ -91,6 +114,28 @@ export default function App() {
 
   const findItem = useCallback((id: string) => itemsRef.current.find((it) => it.id === id), []);
 
+  /* ------------------------------- Ingestion ------------------------------ */
+
+  const addFiles = useCallback(
+    (files: File[]) => {
+      const newItems: QueueItem[] = files.map((file) => {
+        const supported = isSupportedImage(file);
+        return {
+          id: createId(),
+          file,
+          name: file.name,
+          originalSize: file.size,
+          previewUrl: supported ? URL.createObjectURL(file) : null,
+          status: supported ? 'pending' : 'error',
+          error: supported ? undefined : 'Unsupported format — use PNG, JPEG, WebP or AVIF.',
+        };
+      });
+      commitItems((prev) => [...prev, ...newItems]);
+      setNotice(null);
+    },
+    [commitItems],
+  );
+
   /* -------------------------------- Effects ------------------------------- */
 
   // Revoke every object URL when the app unmounts.
@@ -115,27 +160,46 @@ export default function App() {
     };
   }, []);
 
-  /* ------------------------------- Ingestion ------------------------------ */
+  // Global clipboard paste listener (Ctrl+V / Cmd+V anywhere on the page).
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const clipboardItems = e.clipboardData?.items;
+      if (!clipboardItems) return;
 
-  const addFiles = useCallback(
-    (files: File[]) => {
-      const newItems: QueueItem[] = files.map((file) => {
-        const supported = isSupportedImage(file);
-        return {
-          id: createId(),
-          file,
-          name: file.name,
-          originalSize: file.size,
-          previewUrl: supported ? URL.createObjectURL(file) : null,
-          status: supported ? 'pending' : 'error',
-          error: supported ? undefined : 'Unsupported format — use PNG, JPEG, WebP or AVIF.',
-        };
-      });
-      commitItems((prev) => [...prev, ...newItems]);
-      setNotice(null);
-    },
-    [commitItems],
-  );
+      const pastedFiles: File[] = [];
+      for (let i = 0; i < clipboardItems.length; i++) {
+        const item = clipboardItems[i];
+        if (item.kind === 'file' && item.type.startsWith('image/')) {
+          const blob = item.getAsFile();
+          if (!blob) continue;
+
+          const mimeType = blob.type || item.type || 'image/png';
+          const ext = MIME_EXTENSION_MAP[mimeType] ?? 'png';
+          const rawName = blob.name?.trim() ?? '';
+          const fileName =
+            !rawName || GENERIC_CLIPBOARD_NAMES.has(rawName.toLowerCase())
+              ? `clipboard-${timestampForFilename()}-${++pasteCounter}.${ext}`
+              : rawName;
+
+          const file = new File([blob], fileName, {
+            type: mimeType,
+            lastModified: Date.now(),
+          });
+          pastedFiles.push(file);
+        }
+      }
+
+      if (pastedFiles.length > 0) {
+        e.preventDefault();
+        addFiles(pastedFiles);
+      }
+    };
+
+    window.addEventListener('paste', handlePaste);
+    return () => {
+      window.removeEventListener('paste', handlePaste);
+    };
+  }, [addFiles]);
 
   const handleDimensions = useCallback(
     (id: string, width: number, height: number) => {
@@ -173,7 +237,9 @@ export default function App() {
             width: output.width,
             height: output.height,
             size: output.blob.size,
+            mode: snapshot.mode,
             scale: snapshot.scale,
+            maxWidth: snapshot.maxWidth,
             quality: snapshot.quality,
           },
         });
@@ -214,7 +280,15 @@ export default function App() {
     [commitItems, processItem, runLimited],
   );
 
-  const encodeSnapshot: EncodeSettings = { scale: settings.scale, quality: settings.quality };
+  const encodeSnapshot: EncodeSettings = useMemo(
+    () => ({
+      mode: settings.mode,
+      scale: settings.scale,
+      maxWidth: settings.maxWidth,
+      quality: settings.quality,
+    }),
+    [settings.mode, settings.scale, settings.maxWidth, settings.quality],
+  );
 
   const handleConvertAll = () => {
     const ids = itemsRef.current
@@ -224,8 +298,8 @@ export default function App() {
   };
 
   const handleRetry = useCallback(
-    (id: string) => enqueue([id], { scale: settings.scale, quality: settings.quality }),
-    [enqueue, settings.scale, settings.quality],
+    (id: string) => enqueue([id], encodeSnapshot),
+    [enqueue, encodeSnapshot],
   );
 
   /* ------------------------------ Removal ------------------------------ */
@@ -235,6 +309,7 @@ export default function App() {
       const item = findItem(id);
       if (!item) return;
       revokeItemUrls(item);
+      setPreviewId((current) => (current === id ? null : current));
       commitItems((prev) => prev.filter((it) => it.id !== id));
     },
     [commitItems, findItem],
@@ -242,6 +317,7 @@ export default function App() {
 
   const handleClearAll = () => {
     itemsRef.current.forEach(revokeItemUrls);
+    setPreviewId(null);
     commitItems(() => []);
     setNotice(null);
   };
@@ -252,7 +328,10 @@ export default function App() {
     (id: string) => {
       const item = findItem(id);
       if (!item?.result) return;
-      downloadFromUrl(item.result.url, buildOutputName(item.name, item.result.scale, settings.appendSuffix));
+      downloadFromUrl(
+        item.result.url,
+        buildOutputName(item.name, getResultSuffix(item.result), settings.appendSuffix),
+      );
     },
     [findItem, settings.appendSuffix],
   );
@@ -271,7 +350,10 @@ export default function App() {
     try {
       const used = new Set<string>();
       const entries = done.map((it) => ({
-        name: uniqueFileName(buildOutputName(it.name, it.result!.scale, settings.appendSuffix), used),
+        name: uniqueFileName(
+          buildOutputName(it.name, getResultSuffix(it.result!), settings.appendSuffix),
+          used,
+        ),
         blob: it.result!.blob,
       }));
       const zip = await createZipBlob(entries);
@@ -299,15 +381,20 @@ export default function App() {
         done++;
         originalBytes += it.originalSize;
         outputBytes += it.result.size;
-        if (it.result.scale !== settings.scale || it.result.quality !== settings.quality) outdated++;
+        if (isOutdated(it, encodeSnapshot)) outdated++;
       }
     }
     return { pending, outdated, done, errors, originalBytes, outputBytes };
-  }, [items, settings.scale, settings.quality]);
+  }, [items, encodeSnapshot]);
 
   const handleSettingsChange = useCallback(
     (patch: Partial<ProcessSettings>) => setSettings((prev) => ({ ...prev, ...patch })),
     [],
+  );
+
+  const previewItem = useMemo(
+    () => (previewId ? items.find((it) => it.id === previewId) ?? null : null),
+    [items, previewId],
   );
 
   const hasItems = items.length > 0;
@@ -437,8 +524,9 @@ export default function App() {
                 <QueueRow
                   key={item.id}
                   item={item}
-                  scale={settings.scale}
+                  settings={encodeSnapshot}
                   outdated={isOutdated(item, encodeSnapshot)}
+                  onPreview={setPreviewId}
                   onRemove={handleRemove}
                   onDownload={handleDownload}
                   onRetry={handleRetry}
@@ -449,6 +537,15 @@ export default function App() {
           </section>
         )}
       </div>
+
+      {previewItem && (
+        <PreviewModal
+          item={previewItem}
+          onClose={() => setPreviewId(null)}
+          onDownload={handleDownload}
+          onConvert={handleRetry}
+        />
+      )}
     </main>
   );
 }

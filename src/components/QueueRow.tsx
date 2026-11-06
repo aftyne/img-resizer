@@ -10,16 +10,18 @@ import {
   Loader2,
   RotateCw,
   X,
+  ZoomIn,
 } from 'lucide-react';
-import type { ItemStatus, QueueItem } from '../types/image';
-import { computeTargetDimensions, formatBytes, formatPercentChange, percentChange } from '../utils/imageProcessor';
+import type { EncodeSettings, ItemStatus, QueueItem } from '../types/image';
+import { formatBytes, formatPercentChange, percentChange, resolveTargetDimensions } from '../utils/imageProcessor';
 
 interface QueueRowProps {
   item: QueueItem;
-  /** Current global scale, used to preview target dimensions before conversion. */
-  scale: number;
+  /** Current global encode settings, used to preview target dimensions before conversion. */
+  settings: EncodeSettings;
   /** Converted with settings that no longer match the current ones. */
   outdated: boolean;
+  onPreview: (id: string) => void;
   onRemove: (id: string) => void;
   onDownload: (id: string) => void;
   onRetry: (id: string) => void;
@@ -65,43 +67,77 @@ const iconBtnDanger = `${iconBtnBase} hover:bg-[var(--status-error-bg)] hover:te
 const badge =
   'inline-flex items-center gap-1 rounded-[2px] px-1.5 py-0.5 text-xs font-medium tracking-[0.03em] tabular-nums whitespace-nowrap';
 
-function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, onDimensions }: QueueRowProps) {
+function QueueRowImpl({
+  item,
+  settings,
+  outdated,
+  onPreview,
+  onRemove,
+  onDownload,
+  onRetry,
+  onDimensions,
+}: QueueRowProps) {
   const [thumbFailed, setThumbFailed] = useState(false);
   const { result, status } = item;
   const meta = STATUS_META[status];
 
   const hasOriginalDims = item.originalWidth !== undefined && item.originalHeight !== undefined;
-  // Show the actual output dims once converted, otherwise a preview from the current scale.
-  const target = result
-    ? { width: result.width, height: result.height }
-    : hasOriginalDims
-      ? computeTargetDimensions(item.originalWidth!, item.originalHeight!, scale)
-      : null;
+  // Show the actual output dims once converted (unless outdated, where we preview the new target dims),
+  // otherwise a live preview from the current resize settings.
+  const target =
+    result && !outdated
+      ? { width: result.width, height: result.height }
+      : hasOriginalDims
+        ? resolveTargetDimensions(item.originalWidth!, item.originalHeight!, settings)
+        : result
+          ? { width: result.width, height: result.height }
+          : null;
 
   const change = result ? percentChange(item.originalSize, result.size) : 0;
   const canRetry = status === 'error' && item.previewUrl !== null;
+  const canPreview = item.previewUrl !== null && !thumbFailed;
+
+  const convertedSettingDesc = result
+    ? result.mode === 'px'
+      ? `Max ${result.maxWidth}px · Q${result.quality}`
+      : `${result.scale}% · Q${result.quality}`
+    : '';
 
   return (
     <li className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[var(--bg-elevated)]/60 sm:px-4">
-      {/* Thumbnail */}
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[2px] bg-[var(--bg-elevated)] ring-1 ring-[var(--border-strong)]">
-        {item.previewUrl && !thumbFailed ? (
+      {/* 48x48px Click-to-Preview Thumbnail */}
+      {canPreview ? (
+        <button
+          type="button"
+          onClick={() => onPreview(item.id)}
+          title="Click to preview before / after comparison"
+          aria-label={`Preview ${item.name}`}
+          className="group/thumb relative flex size-12 shrink-0 cursor-zoom-in items-center justify-center overflow-hidden rounded-[2px] bg-[var(--bg-elevated)] ring-1 ring-[var(--border-strong)] transition-all outline-none hover:ring-[var(--accent-border)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        >
           <img
-            src={item.previewUrl}
+            src={item.previewUrl!}
             alt=""
             width={48}
             height={48}
             loading="lazy"
             decoding="async"
             draggable={false}
-            className="size-12 object-cover"
+            className="size-12 object-cover transition-transform duration-150 group-hover/thumb:scale-105"
             onLoad={(e) => onDimensions(item.id, e.currentTarget.naturalWidth, e.currentTarget.naturalHeight)}
             onError={() => setThumbFailed(true)}
           />
-        ) : (
+          <span
+            aria-hidden
+            className="absolute inset-0 flex items-center justify-center bg-black/55 opacity-0 transition-opacity duration-150 group-hover/thumb:opacity-100 group-focus-visible/thumb:opacity-100"
+          >
+            <ZoomIn className="size-4 text-white" />
+          </span>
+        </button>
+      ) : (
+        <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[2px] bg-[var(--bg-elevated)] ring-1 ring-[var(--border-strong)]">
           <ImageOff className="size-5 text-[var(--text-muted)]" aria-hidden />
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Name + badges */}
       <div className="min-w-0 flex-1">
@@ -115,7 +151,7 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
               {target && (
                 <>
                   <ArrowRight className="size-3 text-[var(--text-muted)]" aria-label="to" />
-                  <span className={result ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
+                  <span className={result && !outdated ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
                     {target.width}×{target.height}
                   </span>
                 </>
@@ -137,7 +173,7 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
           {outdated && (
             <span
               className={`${badge} ${TINT.warning}`}
-              title={`Converted at ${result?.scale}% · Q${result?.quality} — settings changed`}
+              title={`Converted at ${convertedSettingDesc} — settings changed`}
             >
               Outdated · needs re-convert
             </span>

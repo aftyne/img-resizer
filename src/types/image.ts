@@ -15,18 +15,25 @@ export type ItemStatus =
   /** Failed (corrupt file, unsupported format, encoder failure, …). */
   | 'error';
 
+/** Resize dimension calculation strategy. */
+export type ResizeMode = 'percent' | 'px';
+
 /** Global conversion settings controlled from the top bar. */
 export interface ProcessSettings {
-  /** Resize percentage, 1–200. */
+  /** Resize mode: percentage ('percent') or max width in pixels ('px'). */
+  mode: ResizeMode;
+  /** Resize percentage, 1–200 (capped at 100 by default unless unlocked). */
   scale: number;
+  /** Maximum target width in pixels when `mode === 'px'`. */
+  maxWidth: number;
   /** WebP quality, 10–100. */
   quality: number;
-  /** When true, output is `name-50pct.webp` instead of `name.webp`. */
+  /** When true, output filename includes the scale or max-width suffix. */
   appendSuffix: boolean;
 }
 
 /** The subset of settings that actually affects the encoded pixels. */
-export type EncodeSettings = Pick<ProcessSettings, 'scale' | 'quality'>;
+export type EncodeSettings = Pick<ProcessSettings, 'mode' | 'scale' | 'maxWidth' | 'quality'>;
 
 /** Output of a successful conversion. */
 export interface ProcessedResult {
@@ -37,7 +44,9 @@ export interface ProcessedResult {
   height: number;
   size: number;
   /** Settings this result was produced with (used for "outdated" detection). */
+  mode: ResizeMode;
   scale: number;
+  maxWidth: number;
   quality: number;
 }
 
