@@ -142,55 +142,185 @@ async function decodeImage(file: Blob): Promise<DecodedImage> {
 /*                             Resize + WebP encode                           */
 /* -------------------------------------------------------------------------- */
 
+type AnyCanvas = OffscreenCanvas | HTMLCanvasElement;
 type Context2D = CanvasRenderingContext2D | OffscreenCanvasRenderingContext2D;
 
-function drawHighQuality(ctx: Context2D, source: CanvasImageSource, width: number, height: number) {
+export interface CanvasSurface {
+  canvas: AnyCanvas;
+  ctx: Context2D;
+}
+
+export type SurfaceFactory = (width: number, height: number) => CanvasSurface | null;
+
+function releaseCanvas(canvas: AnyCanvas | null | undefined): void {
+  if (!canvas) return;
+  canvas.width = 0;
+  canvas.height = 0;
+}
+
+function drawHighQuality(
+  ctx: Context2D,
+  source: CanvasImageSource,
+  srcWidth: number,
+  srcHeight: number,
+  dstWidth: number,
+  dstHeight: number,
+): void {
   ctx.imageSmoothingEnabled = true;
   ctx.imageSmoothingQuality = 'high';
-  ctx.drawImage(source, 0, 0, width, height);
+  ctx.drawImage(source, 0, 0, srcWidth, srcHeight, 0, 0, dstWidth, dstHeight);
+}
+
+/**
+ * Renders `source` (`originalWidth × originalHeight`) onto `targetCtx` sized at
+ * `targetWidth × targetHeight`.
+ *
+ * When downscaling below 50% on either dimension, iteratively halves the image
+ * using at most two ping-pong intermediate canvases before drawing the final pass,
+ * avoiding single-pass 2×2 bilinear aliasing/moiré artifacts.
+ * All intermediate canvases have their dimensions zeroed out before returning.
+ */
+export function renderWithStepDown(
+  source: CanvasImageSource,
+  originalWidth: number,
+  originalHeight: number,
+  targetWidth: number,
+  targetHeight: number,
+  targetCtx: Context2D,
+  createSurface: SurfaceFactory,
+): void {
+  const needsStepDown = targetWidth < originalWidth * 0.5 || targetHeight < originalHeight * 0.5;
+
+  if (!needsStepDown) {
+    drawHighQuality(targetCtx, source, originalWidth, originalHeight, targetWidth, targetHeight);
+    return;
+  }
+
+  const pingPong: [CanvasSurface | null, CanvasSurface | null] = [null, null];
+
+  try {
+    let currentSource: CanvasImageSource = source;
+    let currentWidth = originalWidth;
+    let currentHeight = originalHeight;
+    let writeIndex: 0 | 1 = 0;
+
+    while (currentWidth * 0.5 > targetWidth && currentHeight * 0.5 > targetHeight) {
+      const nextWidth = Math.max(targetWidth, Math.floor(currentWidth * 0.5));
+      const nextHeight = Math.max(targetHeight, Math.floor(currentHeight * 0.5));
+
+      let writeSurface = pingPong[writeIndex];
+      if (!writeSurface) {
+        writeSurface = createSurface(nextWidth, nextHeight);
+        if (!writeSurface) {
+          throw new ImageProcessingError('Could not allocate intermediate canvas for step-down resize.');
+        }
+        pingPong[writeIndex] = writeSurface;
+      } else {
+        writeSurface.canvas.width = nextWidth;
+        writeSurface.canvas.height = nextHeight;
+      }
+
+      drawHighQuality(writeSurface.ctx, currentSource, currentWidth, currentHeight, nextWidth, nextHeight);
+
+      currentSource = writeSurface.canvas;
+      currentWidth = nextWidth;
+      currentHeight = nextHeight;
+      writeIndex = writeIndex === 0 ? 1 : 0;
+    }
+
+    // Final pass: draw from the last intermediate buffer onto the final output canvas.
+    drawHighQuality(targetCtx, currentSource, currentWidth, currentHeight, targetWidth, targetHeight);
+  } finally {
+    // Zero out temporary canvas dimensions so the browser releases GPU textures immediately.
+    releaseCanvas(pingPong[0]?.canvas);
+    releaseCanvas(pingPong[1]?.canvas);
+  }
+}
+
+function createOffscreenSurface(width: number, height: number): CanvasSurface | null {
+  if (typeof OffscreenCanvas === 'undefined') return null;
+  const canvas = new OffscreenCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    releaseCanvas(canvas);
+    return null;
+  }
+  return { canvas, ctx };
+}
+
+function createHtmlSurface(width: number, height: number): CanvasSurface | null {
+  if (typeof document === 'undefined') return null;
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) {
+    releaseCanvas(canvas);
+    return null;
+  }
+  return { canvas, ctx };
 }
 
 async function encodeWithOffscreenCanvas(
   source: CanvasImageSource,
-  width: number,
-  height: number,
+  originalWidth: number,
+  originalHeight: number,
+  targetWidth: number,
+  targetHeight: number,
   quality: number,
 ): Promise<Blob | null> {
-  if (typeof OffscreenCanvas === 'undefined') return null;
-
-  const canvas = new OffscreenCanvas(width, height);
-  if (typeof canvas.convertToBlob !== 'function') return null;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
+  const target = createOffscreenSurface(targetWidth, targetHeight);
+  if (!target) return null;
+  const canvas = target.canvas as OffscreenCanvas;
+  if (typeof canvas.convertToBlob !== 'function') {
+    releaseCanvas(canvas);
+    return null;
+  }
 
   try {
-    drawHighQuality(ctx, source, width, height);
+    renderWithStepDown(
+      source,
+      originalWidth,
+      originalHeight,
+      targetWidth,
+      targetHeight,
+      target.ctx,
+      createOffscreenSurface,
+    );
     return await canvas.convertToBlob({ type: 'image/webp', quality });
   } finally {
     // Release the backing store eagerly instead of waiting for GC.
-    canvas.width = 0;
-    canvas.height = 0;
+    releaseCanvas(canvas);
   }
 }
 
 async function encodeWithHtmlCanvas(
   source: CanvasImageSource,
-  width: number,
-  height: number,
+  originalWidth: number,
+  originalHeight: number,
+  targetWidth: number,
+  targetHeight: number,
   quality: number,
 ): Promise<Blob | null> {
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) throw new ImageProcessingError('Canvas 2D context is not available in this browser.');
+  const target = createHtmlSurface(targetWidth, targetHeight);
+  if (!target) {
+    throw new ImageProcessingError('Canvas 2D context is not available in this browser.');
+  }
+  const canvas = target.canvas as HTMLCanvasElement;
 
   try {
-    drawHighQuality(ctx, source, width, height);
+    renderWithStepDown(
+      source,
+      originalWidth,
+      originalHeight,
+      targetWidth,
+      targetHeight,
+      target.ctx,
+      createHtmlSurface,
+    );
     return await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, 'image/webp', quality));
   } finally {
-    canvas.width = 0;
-    canvas.height = 0;
+    releaseCanvas(canvas);
   }
 }
 
@@ -204,7 +334,7 @@ export interface ResizeOutput {
 
 /**
  * Decodes `file`, resizes it by `settings.scale` percent with high-quality smoothing
- * and encodes it to WebP at `settings.quality`.
+ * (using multi-step halving when scaling below 50%) and encodes it to WebP at `settings.quality`.
  */
 export async function resizeImageToWebP(file: Blob, settings: EncodeSettings): Promise<ResizeOutput> {
   const scale = clamp(settings.scale, MIN_SCALE, MAX_SCALE);
@@ -222,12 +352,12 @@ export async function resizeImageToWebP(file: Blob, settings: EncodeSettings): P
 
     let blob: Blob | null = null;
     try {
-      blob = await encodeWithOffscreenCanvas(decoded.source, width, height, quality);
+      blob = await encodeWithOffscreenCanvas(decoded.source, decoded.width, decoded.height, width, height, quality);
     } catch {
       blob = null; // fall back to the DOM canvas below
     }
     if (!blob) {
-      blob = await encodeWithHtmlCanvas(decoded.source, width, height, quality);
+      blob = await encodeWithHtmlCanvas(decoded.source, decoded.width, decoded.height, width, height, quality);
     }
 
     if (!blob || blob.size === 0) {
