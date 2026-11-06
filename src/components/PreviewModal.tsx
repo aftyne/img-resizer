@@ -215,7 +215,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                     {result.width}×{result.height} · {formatBytes(result.size)} ({formatPercentChange(change)})
                   </span>
                 ) : (
-                  <span className="text-[var(--text-muted)]">Not converted yet</span>
+                  <span className="text-zinc-500 dark:text-zinc-400">Not converted yet</span>
                 )}
               </div>
               <div className="bg-checkerboard flex flex-1 items-center justify-center overflow-auto p-4">
