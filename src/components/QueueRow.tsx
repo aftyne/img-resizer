@@ -27,10 +27,10 @@ interface QueueRowProps {
 }
 
 const TINT = {
-  success: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
-  warning: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
-  error: 'bg-red-500/10 text-red-400 border border-red-500/20',
-  neutral: 'bg-zinc-800 text-zinc-300 border border-zinc-700/50',
+  success: 'bg-[var(--status-success-bg)] text-[var(--status-success-text)] border border-[var(--status-success-border)]',
+  warning: 'bg-[var(--status-warning-bg)] text-[var(--status-warning-text)] border border-[var(--status-warning-border)]',
+  error: 'bg-[var(--status-error-bg)] text-[var(--status-error-text)] border border-[var(--status-error-border)]',
+  neutral: 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] border border-[var(--border-subtle)]',
 } as const;
 
 const STATUS_META: Record<ItemStatus, { label: string; className: string }> = {
@@ -58,11 +58,12 @@ function StatusIcon({ status }: { status: ItemStatus }) {
 }
 
 const iconBtnBase =
-  'inline-flex size-8 items-center justify-center rounded-md text-zinc-400 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:pointer-events-none disabled:text-zinc-700';
-const iconBtn = `${iconBtnBase} hover:bg-zinc-800/80 hover:text-zinc-100`;
-const iconBtnDanger = `${iconBtnBase} hover:bg-red-500/10 hover:text-red-400`;
+  'inline-flex size-8 items-center justify-center rounded-[2px] text-[var(--text-secondary)] transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:pointer-events-none disabled:text-[var(--text-muted)] disabled:opacity-40';
+const iconBtn = `${iconBtnBase} hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)]`;
+const iconBtnDanger = `${iconBtnBase} hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)]`;
 
-const badge = 'inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium tabular-nums whitespace-nowrap';
+const badge =
+  'inline-flex items-center gap-1 rounded-[2px] px-1.5 py-0.5 text-xs font-medium tracking-[0.03em] tabular-nums whitespace-nowrap';
 
 function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, onDimensions }: QueueRowProps) {
   const [thumbFailed, setThumbFailed] = useState(false);
@@ -81,9 +82,9 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
   const canRetry = status === 'error' && item.previewUrl !== null;
 
   return (
-    <li className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-zinc-800/60 sm:px-4">
+    <li className="flex items-center gap-3 px-3 py-3 transition-colors hover:bg-[var(--bg-elevated)]/60 sm:px-4">
       {/* Thumbnail */}
-      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-md bg-zinc-800 ring-1 ring-white/10">
+      <div className="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-[2px] bg-[var(--bg-elevated)] ring-1 ring-[var(--border-strong)]">
         {item.previewUrl && !thumbFailed ? (
           <img
             src={item.previewUrl}
@@ -98,13 +99,13 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
             onError={() => setThumbFailed(true)}
           />
         ) : (
-          <ImageOff className="size-5 text-zinc-500" aria-hidden />
+          <ImageOff className="size-5 text-[var(--text-muted)]" aria-hidden />
         )}
       </div>
 
       {/* Name + badges */}
       <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-zinc-100" title={item.name}>
+        <p className="truncate text-sm font-medium text-[var(--text-primary)]" title={item.name}>
           {item.name}
         </p>
         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs">
@@ -113,8 +114,8 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
               {item.originalWidth}×{item.originalHeight}
               {target && (
                 <>
-                  <ArrowRight className="size-3 text-zinc-500" aria-label="to" />
-                  <span className={result ? 'text-zinc-100' : 'text-zinc-400'}>
+                  <ArrowRight className="size-3 text-[var(--text-muted)]" aria-label="to" />
+                  <span className={result ? 'text-[var(--text-primary)]' : 'text-[var(--text-secondary)]'}>
                     {target.width}×{target.height}
                   </span>
                 </>
@@ -143,7 +144,7 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
           )}
 
           {status === 'error' && item.error && (
-            <span className="max-w-full min-w-0 truncate text-red-400" title={item.error}>
+            <span className="max-w-full min-w-0 truncate text-[var(--status-error-text)]" title={item.error}>
               {item.error}
             </span>
           )}
@@ -153,7 +154,7 @@ function QueueRowImpl({ item, scale, outdated, onRemove, onDownload, onRetry, on
       {/* Status + actions */}
       <div className="flex shrink-0 items-center gap-1">
         <span
-          className={`${badge} mr-1 gap-1.5 sm:w-28 ${meta.className}`}
+          className={`${badge} mr-1 gap-1.5 uppercase sm:w-28 ${meta.className}`}
           role="status"
           aria-label={meta.label}
         >

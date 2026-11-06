@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AlertTriangle, ImageIcon, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle, ImageIcon, Moon, RefreshCw, Sun, X } from 'lucide-react';
 import type { EncodeSettings, ProcessSettings, QueueItem } from './types/image';
 import {
   DEFAULT_CONCURRENCY,
@@ -49,9 +49,30 @@ export default function App() {
   const [activeJobs, setActiveJobs] = useState(0);
   const [isZipping, setIsZipping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isDark, setIsDark] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem('theme');
+      return saved ? saved === 'dark' : true;
+    } catch {
+      return true;
+    }
+  });
 
   const [runLimited] = useState(() => createConcurrencyLimiter(DEFAULT_CONCURRENCY));
   const scheduledIds = useRef(new Set<string>());
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDark);
+    try {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    } catch {
+      /* ignore storage errors */
+    }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) {
+      metaTheme.setAttribute('content', isDark ? '#111016' : '#e8e8e2');
+    }
+  }, [isDark]);
 
   /* ----------------------------- State helpers ---------------------------- */
 
@@ -298,14 +319,34 @@ export default function App() {
     <main className="mx-auto min-h-screen max-w-4xl px-4 py-10">
       <header className="mb-6 flex items-end justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-zinc-100">
-            <ImageIcon className="size-5 text-indigo-400" aria-hidden />
+          <h1 className="flex items-center gap-2.5 text-xl font-semibold tracking-[0.08em] text-[var(--text-primary)] uppercase">
+            <ImageIcon className="size-5 text-[var(--accent-text)]" aria-hidden />
             Image Resizer
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">
+          <p className="mt-1 text-xs tracking-[0.03em] text-[var(--text-secondary)]">
             Batch resize &amp; convert to WebP — runs entirely in your browser.
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setIsDark((prev) => !prev)}
+          aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        >
+          {isDark ? (
+            <>
+              <Sun className="size-4 text-[var(--stone)]" aria-hidden />
+              <span className="hidden sm:inline">Light</span>
+            </>
+          ) : (
+            <>
+              <Moon className="size-4 text-[var(--accent-text)]" aria-hidden />
+              <span className="hidden sm:inline">Dark</span>
+            </>
+          )}
+        </button>
       </header>
 
       <div className="space-y-4">
@@ -325,14 +366,14 @@ export default function App() {
         {notice && (
           <div
             role="alert"
-            className="flex items-start gap-3 rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+            className="flex items-start gap-3 rounded-[2px] border border-[var(--status-error-border)] bg-[var(--status-error-bg)] px-4 py-3 text-xs tracking-[0.02em] text-[var(--status-error-text)]"
           >
-            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-red-400" aria-hidden />
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--status-error-text)]" aria-hidden />
             <p className="flex-1">{notice}</p>
             <button
               type="button"
               onClick={() => setNotice(null)}
-              className="rounded p-0.5 text-red-400 transition-colors hover:bg-red-500/15 hover:text-red-300"
+              className="rounded-[2px] p-0.5 text-[var(--status-error-text)] transition-colors hover:bg-[var(--status-error-bg)]"
               aria-label="Dismiss"
             >
               <X className="size-4" aria-hidden />
@@ -341,18 +382,18 @@ export default function App() {
         )}
 
         {stats.outdated > 0 && (
-          <div className="flex flex-col gap-3 rounded-lg border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-300 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-3 rounded-[2px] border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-4 py-3 text-xs tracking-[0.02em] text-[var(--status-warning-text)] sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-center gap-2">
-              <AlertTriangle className="size-4 shrink-0 text-amber-400" aria-hidden />
+              <AlertTriangle className="size-4 shrink-0 text-[var(--status-warning-text)]" aria-hidden />
               Settings changed — {stats.outdated} converted {stats.outdated === 1 ? 'image is' : 'images are'} out
               of date.
             </p>
             <button
               type="button"
               onClick={handleConvertAll}
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-md bg-indigo-600 px-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-indigo-500 focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950 focus-visible:outline-none"
+              className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
             >
-              <RefreshCw className="size-4" aria-hidden />
+              <RefreshCw className="size-3.5" aria-hidden />
               Apply &amp; Re-process
             </button>
           </div>
@@ -363,27 +404,35 @@ export default function App() {
         {hasItems && (
           <section
             aria-label="File queue"
-            className="overflow-hidden rounded-xl border border-zinc-800/80 bg-zinc-900 shadow-sm"
+            className="overflow-hidden rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800/80 px-4 py-2.5 text-xs text-zinc-500">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-4 py-2.5 text-xs tracking-[0.04em] text-[var(--text-muted)] uppercase">
               <span>
-                <span className="font-semibold text-zinc-100">{items.length}</span>{' '}
+                <span className="font-semibold text-[var(--text-primary)]">{items.length}</span>{' '}
                 {items.length === 1 ? 'image' : 'images'}
                 {' · '}
                 {stats.done} done
                 {activeJobs > 0 && ` · ${activeJobs} in progress`}
-                {stats.errors > 0 && <span className="text-red-400"> · {stats.errors} failed</span>}
+                {stats.errors > 0 && (
+                  <span className="text-[var(--status-error-text)]"> · {stats.errors} failed</span>
+                )}
               </span>
               {stats.done > 0 && (
-                <span className="tabular-nums text-zinc-400">
+                <span className="tabular-nums text-[var(--text-secondary)]">
                   {formatBytes(stats.originalBytes)} → {formatBytes(stats.outputBytes)}{' '}
-                  <span className={totalChange <= 0 ? 'font-semibold text-emerald-400' : 'font-semibold text-amber-400'}>
+                  <span
+                    className={
+                      totalChange <= 0
+                        ? 'font-semibold text-[var(--status-success-text)]'
+                        : 'font-semibold text-[var(--status-warning-text)]'
+                    }
+                  >
                     ({formatPercentChange(totalChange)})
                   </span>
                 </span>
               )}
             </div>
-            <ul className="divide-y divide-zinc-800/80">
+            <ul className="divide-y divide-[var(--border-subtle)]">
               {items.map((item) => (
                 <QueueRow
                   key={item.id}

@@ -1,13 +1,91 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: 'JetBrains Mono', 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-mono: 'JetBrains Mono', 'Share Tech Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
 @layer base {
+  /* Light Mode: high-contrast architectural stone palette paired with #526284 slate-blue */
   :root {
-    /* Permanent dark theme: native scrollbars, spin buttons & form controls render dark. */
+    color-scheme: light;
+    --bg-app: #e8e8e2;
+    --bg-surface: #f4f4ef;
+    --bg-surface-alt: #eaeae3;
+    --bg-elevated: #dfdfd7;
+    --bg-track: #cfcfc6;
+    --border-subtle: #d2d2c8;
+    --border-strong: #b8b8ad;
+    --text-primary: #111016;
+    --text-secondary: #45444c;
+    --text-muted: #6e6d75;
+    --accent: #526284;
+    --accent-hover: #42506e;
+    --accent-fg: #f9f9f9;
+    --accent-subtle: rgba(82, 98, 132, 0.14);
+    --accent-border: #526284;
+    --accent-text: #3b4a68;
+    --stone: #adada5;
+
+    --status-success-bg: rgba(45, 106, 62, 0.1);
+    --status-success-border: rgba(45, 106, 62, 0.3);
+    --status-success-text: #286138;
+
+    --status-warning-bg: rgba(154, 103, 28, 0.1);
+    --status-warning-border: rgba(154, 103, 28, 0.3);
+    --status-warning-text: #8a5a14;
+
+    --status-error-bg: rgba(176, 56, 56, 0.1);
+    --status-error-border: rgba(176, 56, 56, 0.3);
+    --status-error-text: #a83232;
+  }
+
+  /* Dark Mode: exact hex tokens extracted from the reference dashboard image */
+  html.dark {
     color-scheme: dark;
+    --bg-app: #111016;
+    --bg-surface: #201f24;
+    --bg-surface-alt: #18171c;
+    --bg-elevated: #2b2a30;
+    --bg-track: #333236;
+    --border-subtle: #2e2d33;
+    --border-strong: #3e3d45;
+    --text-primary: #f2f2f3;
+    --text-secondary: #adada5;
+    --text-muted: #6e6d75;
+    --accent: #526284;
+    --accent-hover: #627499;
+    --accent-fg: #f9f9f9;
+    --accent-subtle: rgba(82, 98, 132, 0.22);
+    --accent-border: #687b9e;
+    --accent-text: #9bb0d6;
+    --stone: #adada5;
+
+    --status-success-bg: rgba(107, 158, 120, 0.14);
+    --status-success-border: rgba(107, 158, 120, 0.35);
+    --status-success-text: #84b892;
+
+    --status-warning-bg: rgba(201, 154, 91, 0.14);
+    --status-warning-border: rgba(201, 154, 91, 0.35);
+    --status-warning-text: #d9ac6f;
+
+    --status-error-bg: rgba(200, 100, 100, 0.14);
+    --status-error-border: rgba(200, 100, 100, 0.35);
+    --status-error-text: #e08282;
+  }
+
+  body {
+    font-family: var(--font-mono);
+    background-color: var(--bg-app);
+    color: var(--text-primary);
   }
 
   input[type='range'] {
-    accent-color: var(--color-indigo-500);
+    accent-color: var(--accent);
     cursor: pointer;
+    background: red !important;
   }
+
 }

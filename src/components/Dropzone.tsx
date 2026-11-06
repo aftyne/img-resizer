@@ -59,10 +59,10 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
   };
 
   const base =
-    'group cursor-pointer select-none rounded-xl border-2 border-dashed transition-colors outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950';
+    'group cursor-pointer select-none rounded-[2px] border border-dashed transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]';
   const state = isDragging
-    ? 'border-indigo-500 bg-indigo-500/10 text-indigo-300'
-    : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700 hover:bg-zinc-900/70';
+    ? 'border-[var(--accent-border)] bg-[var(--accent-subtle)] text-[var(--accent-text)]'
+    : 'border-[var(--border-strong)] bg-[var(--bg-surface)] hover:border-[var(--accent-border)] hover:bg-[var(--bg-elevated)]/60';
 
   return (
     <div
@@ -89,32 +89,38 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
       />
 
       {compact ? (
-        <div className="flex items-center justify-center gap-2 px-4 py-3 text-sm">
+        <div className="flex items-center justify-center gap-2 px-4 py-3 text-xs tracking-[0.06em] uppercase">
           <Plus
-            className={`size-4 transition-colors ${isDragging ? 'text-indigo-300' : 'text-zinc-500 group-hover:text-zinc-100'}`}
+            className={`size-4 transition-colors ${
+              isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
+            }`}
             aria-hidden
           />
-          <span className={`font-medium ${isDragging ? 'text-indigo-300' : 'text-zinc-300'}`}>
+          <span className={`font-medium ${isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'}`}>
             {isDragging ? 'Drop to add images' : 'Add more images…'}
           </span>
-          <span className="hidden text-zinc-500 sm:inline">or drop files here</span>
+          <span className="hidden text-[var(--text-muted)] sm:inline">or drop files here</span>
         </div>
       ) : (
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
           <div
             className={`flex size-12 items-center justify-center rounded-full ring-1 transition-colors ${
               isDragging
-                ? 'bg-indigo-500/15 ring-indigo-500/40'
-                : 'bg-zinc-800/60 ring-zinc-700/60 group-hover:bg-zinc-800'
+                ? 'bg-[var(--accent)] text-[var(--accent-fg)] ring-[var(--accent-border)]'
+                : 'bg-[var(--bg-elevated)] text-[var(--text-secondary)] ring-[var(--border-strong)] group-hover:bg-[var(--accent)] group-hover:text-[var(--accent-fg)] group-hover:ring-[var(--accent-border)]'
             }`}
           >
-            <ImagePlus className={`size-6 ${isDragging ? 'text-indigo-300' : 'text-zinc-400'}`} aria-hidden />
+            <ImagePlus className="size-5" aria-hidden />
           </div>
           <div>
-            <p className={`text-base font-semibold ${isDragging ? 'text-indigo-300' : 'text-zinc-100'}`}>
+            <p
+              className={`text-sm font-semibold tracking-[0.08em] uppercase ${
+                isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
+              }`}
+            >
               {isDragging ? 'Drop images to add them' : 'Drop images here or click to browse'}
             </p>
-            <p className="mt-1 text-sm text-zinc-500">
+            <p className="mt-1.5 text-xs tracking-[0.03em] text-[var(--text-muted)]">
               PNG, JPEG, WebP or AVIF · single or bulk · processed locally, nothing is uploaded
             </p>
           </div>
