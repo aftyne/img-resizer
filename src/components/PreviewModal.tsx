@@ -57,39 +57,51 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 p-4 backdrop-blur-sm dark:bg-black/80 dark:backdrop-blur-sm sm:p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/40 p-0 backdrop-blur-sm dark:bg-black/80 dark:backdrop-blur-sm sm:p-6"
     >
-      <div className="flex max-h-[92vh] w-full max-w-5xl flex-col overflow-hidden rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xl">
+      <div className="flex max-h-[90vh] w-[calc(100%-1.5rem)] max-w-5xl flex-col overflow-hidden rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] text-[var(--text-primary)] shadow-2xl sm:max-h-[92vh] sm:w-full">
         {/* Modal Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-4 py-3">
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold tracking-[0.04em] text-[var(--text-primary)]" title={item.name}>
-              {item.name}
-            </h2>
-            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)] tabular-nums">
-              {item.originalWidth && item.originalHeight && (
-                <span>
-                  Original: {item.originalWidth}×{item.originalHeight} ({formatBytes(item.originalSize)})
-                </span>
-              )}
-              {result && (
-                <>
-                  <ArrowRight className="size-3 text-[var(--text-muted)]" aria-hidden />
-                  <span className="font-semibold text-[var(--text-primary)]">
-                    WebP: {result.width}×{result.height} ({formatBytes(result.size)})
+        <div className="flex flex-col gap-2.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-3.5 py-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:gap-3 sm:px-4">
+          <div className="flex min-w-0 items-start justify-between gap-2 sm:flex-1">
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate text-sm font-semibold tracking-[0.04em] text-[var(--text-primary)]" title={item.name}>
+                {item.name}
+              </h2>
+              <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-[var(--text-secondary)] tabular-nums">
+                {item.originalWidth && item.originalHeight && (
+                  <span>
+                    Original: {item.originalWidth}×{item.originalHeight} ({formatBytes(item.originalSize)})
                   </span>
-                  <span
-                    className={`rounded-[2px] px-1.5 py-0.5 text-[11px] font-semibold ${
-                      change <= 0
-                        ? 'bg-[var(--status-success-bg)] text-[var(--status-success-text)]'
-                        : 'bg-[var(--status-warning-bg)] text-[var(--status-warning-text)]'
-                    }`}
-                  >
-                    {formatPercentChange(change)}
-                  </span>
-                </>
-              )}
+                )}
+                {result && (
+                  <>
+                    <ArrowRight className="size-3 shrink-0 text-[var(--text-muted)]" aria-hidden />
+                    <span className="font-semibold text-[var(--text-primary)]">
+                      WebP: {result.width}×{result.height} ({formatBytes(result.size)})
+                    </span>
+                    <span
+                      className={`rounded-[2px] px-1.5 py-0.5 text-[11px] font-semibold ${
+                        change <= 0
+                          ? 'bg-[var(--status-success-bg)] text-[var(--status-success-text)]'
+                          : 'bg-[var(--status-warning-bg)] text-[var(--status-warning-text)]'
+                      }`}
+                    >
+                      {formatPercentChange(change)}
+                    </span>
+                  </>
+                )}
+              </div>
             </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close preview"
+              title="Close (Esc)"
+              className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition-colors outline-none hover:border-[var(--status-error-border)] hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:hidden"
+            >
+              <X className="size-4" aria-hidden />
+            </button>
           </div>
 
           {/* View Mode Controls */}
@@ -97,45 +109,45 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
             <div
               role="group"
               aria-label="Preview comparison mode"
-              className="inline-flex rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5"
+              className="flex max-w-full flex-wrap items-center gap-1 overflow-x-auto rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] p-0.5"
             >
               <button
                 type="button"
                 aria-pressed={compareMode === 'processed'}
                 onClick={() => setCompareMode('processed')}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] uppercase transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] ${
+                className={`inline-flex min-h-11 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-7 sm:min-h-0 ${
                   compareMode === 'processed'
                     ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <Sparkles className="size-3.5" aria-hidden />
-                Processed WebP
+                <Sparkles className="size-3.5 shrink-0" aria-hidden />
+                Processed
               </button>
               <button
                 type="button"
                 aria-pressed={compareMode === 'original'}
                 onClick={() => setCompareMode('original')}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] uppercase transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] ${
+                className={`inline-flex min-h-11 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-7 sm:min-h-0 ${
                   compareMode === 'original'
                     ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <Eye className="size-3.5" aria-hidden />
+                <Eye className="size-3.5 shrink-0" aria-hidden />
                 Original
               </button>
               <button
                 type="button"
                 aria-pressed={compareMode === 'side-by-side'}
                 onClick={() => setCompareMode('side-by-side')}
-                className={`inline-flex h-7 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] uppercase transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] ${
+                className={`inline-flex min-h-11 items-center gap-1.5 rounded-[1px] px-2.5 text-xs font-medium tracking-[0.04em] whitespace-nowrap uppercase transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-7 sm:min-h-0 ${
                   compareMode === 'side-by-side'
                     ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
-                <Columns2 className="size-3.5" aria-hidden />
+                <Columns2 className="size-3.5 shrink-0" aria-hidden />
                 Side-by-Side
               </button>
             </div>
@@ -145,16 +157,16 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
               onClick={() => setNativeScale((prev) => !prev)}
               aria-pressed={nativeScale}
               title={nativeScale ? 'Showing at 1:1 native pixel scale — click to fit viewport' : 'Showing fitted to viewport — click for 1:1 native scale'}
-              className="inline-flex h-8 items-center gap-1.5 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 text-xs font-medium tracking-[0.04em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)] px-2.5 text-xs font-medium tracking-[0.04em] whitespace-nowrap text-[var(--text-secondary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-8 sm:min-h-0"
             >
               {nativeScale ? (
                 <>
-                  <Minimize2 className="size-3.5" aria-hidden />
+                  <Minimize2 className="size-3.5 shrink-0" aria-hidden />
                   1:1 Native
                 </>
               ) : (
                 <>
-                  <Maximize2 className="size-3.5" aria-hidden />
+                  <Maximize2 className="size-3.5 shrink-0" aria-hidden />
                   Fit
                 </>
               )}
@@ -165,7 +177,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
               onClick={onClose}
               aria-label="Close preview"
               title="Close (Esc)"
-              className="inline-flex size-8 items-center justify-center rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition-colors outline-none hover:border-[var(--status-error-border)] hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="hidden size-8 items-center justify-center rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-secondary)] transition-colors outline-none hover:border-[var(--status-error-border)] hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:inline-flex"
             >
               <X className="size-4" aria-hidden />
             </button>
@@ -174,10 +186,10 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
 
         {/* Modal Body — Checkerboard Viewport */}
         {compareMode === 'side-by-side' ? (
-          <div className="grid min-h-[340px] flex-1 grid-cols-1 divide-y divide-[var(--border-subtle)] overflow-hidden md:grid-cols-2 md:divide-x md:divide-y-0">
-            {/* Left Pane: Original Source */}
-            <div className="flex min-h-0 flex-col">
-              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs">
+          <div className="flex flex-1 min-h-0 flex-col divide-y divide-[var(--border-subtle)] overflow-auto md:grid md:grid-cols-2 md:divide-x md:divide-y-0 md:overflow-hidden">
+            {/* Top/Left Pane: Original Source */}
+            <div className="flex min-h-[220px] flex-1 flex-col md:min-h-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs">
                 <span className="font-semibold tracking-[0.06em] text-[var(--text-secondary)] uppercase">
                   Before · Original Source
                 </span>
@@ -188,7 +200,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                   {formatBytes(item.originalSize)}
                 </span>
               </div>
-              <div className="bg-checkerboard flex flex-1 items-center justify-center overflow-auto p-4">
+              <div className="bg-checkerboard flex flex-1 min-h-0 items-center justify-center overflow-auto p-3 sm:p-4">
                 {item.previewUrl ? (
                   <img
                     src={item.previewUrl}
@@ -204,9 +216,9 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
               </div>
             </div>
 
-            {/* Right Pane: Processed WebP */}
-            <div className="flex min-h-0 flex-col">
-              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs">
+            {/* Bottom/Right Pane: Processed WebP */}
+            <div className="flex min-h-[220px] flex-1 flex-col md:min-h-0">
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] px-3 py-1.5 text-xs">
                 <span className="font-semibold tracking-[0.06em] text-[var(--accent-text)] uppercase">
                   After · Processed WebP
                 </span>
@@ -215,10 +227,10 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                     {result.width}×{result.height} · {formatBytes(result.size)} ({formatPercentChange(change)})
                   </span>
                 ) : (
-                  <span className="text-zinc-500 dark:text-zinc-400">Not converted yet</span>
+                  <span className="text-[var(--text-muted)]">Not converted yet</span>
                 )}
               </div>
-              <div className="bg-checkerboard flex flex-1 items-center justify-center overflow-auto p-4">
+              <div className="bg-checkerboard flex flex-1 min-h-0 items-center justify-center overflow-auto p-3 sm:p-4">
                 {result ? (
                   <img
                     src={result.url}
@@ -229,7 +241,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                     className={imgScaleClass}
                   />
                 ) : (
-                  <div className="flex flex-col items-center gap-3 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)]/95 px-5 py-4 text-center backdrop-blur-xs">
+                  <div className="flex flex-col items-center gap-3 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)]/95 px-4 py-4 text-center backdrop-blur-xs sm:px-5">
                     <p className="text-xs text-[var(--text-secondary)]">
                       Convert this image to inspect the WebP output side-by-side.
                     </p>
@@ -237,7 +249,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                       type="button"
                       disabled={isProcessing}
                       onClick={() => onConvert(item.id)}
-                      className="inline-flex h-8 items-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
+                      className="inline-flex min-h-11 items-center gap-2 rounded-[2px] bg-[var(--accent)] px-3.5 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors outline-none hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50 sm:h-8 sm:min-h-0"
                     >
                       <Zap className="size-3.5" aria-hidden />
                       {isProcessing ? 'Converting…' : 'Convert Now'}
@@ -248,7 +260,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
             </div>
           </div>
         ) : compareMode === 'processed' ? (
-          <div className="bg-checkerboard flex min-h-[340px] flex-1 items-center justify-center overflow-auto p-6">
+          <div className="bg-checkerboard flex flex-1 min-h-0 items-center justify-center overflow-auto p-3 sm:p-6">
             {result ? (
               <img
                 src={result.url}
@@ -259,16 +271,16 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                 className={imgScaleClass}
               />
             ) : (
-              <div className="flex flex-col items-center gap-3 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)]/95 px-6 py-5 text-center backdrop-blur-xs">
+              <div className="flex flex-col items-center gap-3 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface)]/95 px-4 py-5 text-center backdrop-blur-xs sm:px-6">
                 <p className="text-xs text-[var(--text-secondary)]">
                   This image has not been converted to WebP yet.
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center justify-center gap-2">
                   <button
                     type="button"
                     disabled={isProcessing}
                     onClick={() => onConvert(item.id)}
-                    className="inline-flex h-8 items-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors hover:bg-[var(--accent-hover)] disabled:opacity-50"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[2px] bg-[var(--accent)] px-3.5 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors outline-none hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50 sm:h-8 sm:min-h-0"
                   >
                     <Zap className="size-3.5" aria-hidden />
                     {isProcessing ? 'Converting…' : 'Convert Now'}
@@ -276,7 +288,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
                   <button
                     type="button"
                     onClick={() => setCompareMode('original')}
-                    className="inline-flex h-8 items-center gap-2 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--text-primary)] uppercase transition-colors hover:border-[var(--accent-border)]"
+                    className="inline-flex min-h-11 items-center gap-2 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3.5 text-xs font-medium tracking-[0.06em] text-[var(--text-primary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-8 sm:min-h-0"
                   >
                     View Original
                   </button>
@@ -285,7 +297,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
             )}
           </div>
         ) : (
-          <div className="bg-checkerboard flex min-h-[340px] flex-1 items-center justify-center overflow-auto p-6">
+          <div className="bg-checkerboard flex flex-1 min-h-0 items-center justify-center overflow-auto p-3 sm:p-6">
             {item.previewUrl ? (
               <img
                 src={item.previewUrl}
@@ -302,12 +314,12 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
         )}
 
         {/* Modal Footer */}
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-4 py-2.5 text-xs">
-          <div className="flex flex-wrap items-center gap-3 text-[var(--text-secondary)] tabular-nums">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 border-t border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-3.5 py-2.5 text-xs sm:gap-3 sm:px-4">
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-[var(--text-secondary)] tabular-nums">
             {compareMode === 'processed' && result ? (
               <>
                 <span className="font-semibold tracking-[0.05em] text-[var(--accent-text)] uppercase">
-                  Showing: Processed WebP ({nativeScale ? '1:1 Native Scale' : 'Fit to Viewport'})
+                  Showing: Processed WebP ({nativeScale ? '1:1 Native' : 'Fit'})
                 </span>
                 <span>·</span>
                 <span>
@@ -319,7 +331,7 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
             ) : compareMode === 'original' ? (
               <>
                 <span className="font-semibold tracking-[0.05em] text-[var(--text-primary)] uppercase">
-                  Showing: Original Source ({nativeScale ? '1:1 Native Scale' : 'Fit to Viewport'})
+                  Showing: Original Source ({nativeScale ? '1:1 Native' : 'Fit'})
                 </span>
                 {item.originalWidth && item.originalHeight && (
                   <>
@@ -334,26 +346,26 @@ export function PreviewModal({ item, onClose, onDownload, onConvert }: PreviewMo
               </>
             ) : (
               <span className="font-semibold tracking-[0.05em] text-[var(--text-primary)] uppercase">
-                Showing: Before / After Side-by-Side ({nativeScale ? '1:1 Native Scale' : 'Fit to Viewport'})
+                Showing: Before / After ({nativeScale ? '1:1 Native' : 'Fit'})
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
             {result && (
               <button
                 type="button"
                 onClick={() => onDownload(item.id)}
-                className="inline-flex h-8 items-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors outline-none hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                className="inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-[2px] bg-[var(--accent)] px-3.5 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors outline-none hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-8 sm:min-h-0 sm:flex-initial"
               >
-                <Download className="size-3.5" aria-hidden />
+                <Download className="size-3.5 shrink-0" aria-hidden />
                 Download WebP
               </button>
             )}
             <button
               type="button"
               onClick={onClose}
-              className="inline-flex h-8 items-center rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+              className="inline-flex min-h-11 flex-1 items-center justify-center rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-elevated)] px-3.5 text-xs font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-8 sm:min-h-0 sm:flex-initial"
             >
               Close
             </button>

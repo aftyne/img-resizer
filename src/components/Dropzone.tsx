@@ -89,9 +89,9 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
       />
 
       {compact ? (
-        <div className="flex items-center justify-center gap-2 px-4 py-3 text-xs tracking-[0.06em] uppercase">
+        <div className="flex min-h-11 flex-wrap items-center justify-center gap-2 px-3.5 py-2.5 text-xs tracking-[0.06em] uppercase sm:px-4 sm:py-3">
           <Plus
-            className={`size-4 transition-colors ${
+            className={`size-4 shrink-0 transition-colors ${
               isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
             }`}
             aria-hidden
@@ -102,7 +102,7 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
           <span className="hidden text-[var(--text-muted)] sm:inline">or drop files / Ctrl+V to paste</span>
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-16 text-center">
+        <div className="flex flex-col items-center justify-center gap-3 px-4 py-10 text-center sm:px-6 sm:py-16">
           <div
             className={`flex size-12 items-center justify-center rounded-full ring-1 transition-colors ${
               isDragging
@@ -112,15 +112,15 @@ export function Dropzone({ compact, onFiles }: DropzoneProps) {
           >
             <ImagePlus className="size-5" aria-hidden />
           </div>
-          <div>
+          <div className="max-w-lg">
             <p
-              className={`text-sm font-semibold tracking-[0.08em] uppercase ${
+              className={`text-xs font-semibold tracking-[0.08em] uppercase sm:text-sm ${
                 isDragging ? 'text-[var(--accent-text)]' : 'text-[var(--text-primary)]'
               }`}
             >
               {isDragging ? 'Drop images to add them' : 'Drop images here, click to browse, or press Ctrl+V'}
             </p>
-            <p className="mt-1.5 text-xs tracking-[0.03em] text-[var(--text-muted)]">
+            <p className="mt-1.5 text-xs leading-relaxed tracking-[0.03em] text-[var(--text-muted)]">
               PNG, JPEG, WebP or AVIF · single, bulk or clipboard paste · processed locally, nothing is uploaded
             </p>
           </div>

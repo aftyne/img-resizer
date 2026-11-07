@@ -403,14 +403,24 @@ export default function App() {
   /* -------------------------------- Render ------------------------------- */
 
   return (
-    <main className="mx-auto min-h-screen max-w-4xl px-4 py-10">
-      <header className="mb-6 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="flex items-center gap-2.5 text-xl font-semibold tracking-[0.08em] text-[var(--text-primary)] uppercase">
-            <ImageIcon className="size-5 text-[var(--accent-text)]" aria-hidden />
-            Image Resizer
-          </h1>
-          <p className="mt-1 text-xs tracking-[0.03em] text-[var(--text-secondary)]">
+    <main className="mx-auto min-h-screen w-full max-w-4xl overflow-x-hidden px-3 py-6 sm:px-4 sm:py-10">
+      <header className="mb-5 flex flex-wrap items-start justify-between gap-3 sm:mb-6 sm:items-end sm:gap-4">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="flex items-center gap-2 text-lg font-semibold tracking-[0.08em] text-[var(--text-primary)] uppercase sm:gap-2.5 sm:text-xl">
+              <ImageIcon className="size-5 shrink-0 text-[var(--accent-text)]" aria-hidden />
+              <span>Image Resizer</span>
+            </h1>
+            {hasItems && (
+              <span
+                aria-label={`${items.length} ${items.length === 1 ? 'image' : 'images'} in queue`}
+                className="inline-flex items-center rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-2 py-0.5 text-[11px] font-medium tracking-[0.04em] text-[var(--text-secondary)] tabular-nums uppercase"
+              >
+                {items.length} {items.length === 1 ? 'file' : 'files'}
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed tracking-[0.03em] text-[var(--text-secondary)]">
             Batch resize &amp; convert to WebP — runs entirely in your browser.
           </p>
         </div>
@@ -420,7 +430,7 @@ export default function App() {
           onClick={() => setIsDark((prev) => !prev)}
           aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
           title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-          className="inline-flex h-9 items-center gap-2 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+          className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center gap-2 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--text-secondary)] uppercase transition-colors outline-none hover:border-[var(--accent-border)] hover:bg-[var(--bg-elevated)] hover:text-[var(--text-primary)] active:bg-[var(--bg-elevated)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:min-h-9 sm:min-w-0"
         >
           {isDark ? (
             <>
@@ -453,14 +463,14 @@ export default function App() {
         {notice && (
           <div
             role="alert"
-            className="flex items-start gap-3 rounded-[2px] border border-[var(--status-error-border)] bg-[var(--status-error-bg)] px-4 py-3 text-xs tracking-[0.02em] text-[var(--status-error-text)]"
+            className="flex items-start gap-3 rounded-[2px] border border-[var(--status-error-border)] bg-[var(--status-error-bg)] px-3.5 py-3 text-xs tracking-[0.02em] text-[var(--status-error-text)] sm:px-4"
           >
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--status-error-text)]" aria-hidden />
-            <p className="flex-1">{notice}</p>
+            <p className="min-w-0 flex-1 break-words">{notice}</p>
             <button
               type="button"
               onClick={() => setNotice(null)}
-              className="rounded-[2px] p-0.5 text-[var(--status-error-text)] transition-colors hover:bg-[var(--status-error-bg)]"
+              className="-my-2 -mr-2 inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-[2px] text-[var(--status-error-text)] transition-colors outline-none hover:bg-[var(--status-error-bg)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:my-0 sm:mr-0 sm:min-h-7 sm:min-w-7"
               aria-label="Dismiss"
             >
               <X className="size-4" aria-hidden />
@@ -469,16 +479,18 @@ export default function App() {
         )}
 
         {stats.outdated > 0 && (
-          <div className="flex flex-col gap-3 rounded-[2px] border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-4 py-3 text-xs tracking-[0.02em] text-[var(--status-warning-text)] sm:flex-row sm:items-center sm:justify-between">
-            <p className="flex items-center gap-2">
-              <AlertTriangle className="size-4 shrink-0 text-[var(--status-warning-text)]" aria-hidden />
-              Settings changed — {stats.outdated} converted {stats.outdated === 1 ? 'image is' : 'images are'} out
-              of date.
+          <div className="flex flex-col gap-3 rounded-[2px] border border-[var(--status-warning-border)] bg-[var(--status-warning-bg)] px-3.5 py-3 text-xs tracking-[0.02em] text-[var(--status-warning-text)] sm:flex-row sm:items-center sm:justify-between sm:px-4">
+            <p className="flex items-start gap-2 sm:items-center">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-[var(--status-warning-text)] sm:mt-0" aria-hidden />
+              <span>
+                Settings changed — {stats.outdated} converted {stats.outdated === 1 ? 'image is' : 'images are'} out
+                of date.
+              </span>
             </p>
             <button
               type="button"
               onClick={handleConvertAll}
-              className="inline-flex h-8 shrink-0 items-center justify-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors hover:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:outline-none"
+              className="inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-[2px] bg-[var(--accent)] px-3 text-xs font-medium tracking-[0.06em] text-[var(--accent-fg)] uppercase transition-colors outline-none hover:bg-[var(--accent-hover)] active:bg-[var(--accent-hover)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:min-h-8 sm:w-auto"
             >
               <RefreshCw className="size-3.5" aria-hidden />
               Apply &amp; Re-process
@@ -493,8 +505,8 @@ export default function App() {
             aria-label="File queue"
             className="overflow-hidden rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-4 py-2.5 text-xs tracking-[0.04em] text-[var(--text-muted)] uppercase">
-              <span>
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-b border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-3 py-2.5 text-xs tracking-[0.04em] text-[var(--text-muted)] uppercase sm:px-4">
+              <span className="min-w-0">
                 <span className="font-semibold text-[var(--text-primary)]">{items.length}</span>{' '}
                 {items.length === 1 ? 'image' : 'images'}
                 {' · '}

@@ -30,7 +30,7 @@ interface ControlBarProps {
 }
 
 const btnBase =
-  'inline-flex h-9 items-center justify-center gap-2 rounded-[2px] px-3.5 text-xs font-medium tracking-[0.06em] uppercase whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:pointer-events-none';
+  'inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 rounded-[2px] px-3.5 text-xs font-medium tracking-[0.06em] uppercase whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] active:opacity-90 disabled:pointer-events-none';
 
 const primaryBtn = `${btnBase} border border-transparent bg-[var(--accent)] text-[var(--accent-fg)] hover:bg-[var(--accent-hover)]`;
 const primaryDisabled =
@@ -147,12 +147,12 @@ export function ControlBar({
   return (
     <section
       aria-label="Conversion settings"
-      className="sticky top-3 z-20 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)]"
+      className="relative z-20 rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] sm:sticky sm:top-3"
     >
-      <div className="grid gap-x-8 gap-y-5 p-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-x-6 gap-y-5 p-3.5 sm:grid-cols-2 sm:p-4 lg:gap-x-8">
         {/* Resize (% Scale vs Max px) */}
-        <div className="min-w-0">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="min-w-0 flex flex-col justify-between gap-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               <label
                 htmlFor={settings.mode === 'percent' ? 'scale-input' : 'max-width-input'}
@@ -170,7 +170,7 @@ export function ControlBar({
                   aria-pressed={settings.mode === 'percent'}
                   onClick={() => handleModeChange('percent')}
                   title="Percentage scale mode"
-                  className={`h-5 rounded-[1px] px-2 text-[11px] font-semibold tracking-[0.06em] uppercase transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] ${
+                  className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[1px] px-2.5 text-[11px] font-semibold tracking-[0.06em] uppercase transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-6 sm:min-h-0 sm:min-w-0 sm:px-2 ${
                     settings.mode === 'percent'
                       ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -183,7 +183,7 @@ export function ControlBar({
                   aria-pressed={settings.mode === 'px'}
                   onClick={() => handleModeChange('px')}
                   title="Max width (px) mode"
-                  className={`h-5 rounded-[1px] px-2 text-[11px] font-semibold tracking-[0.06em] uppercase transition-colors outline-none focus-visible:ring-1 focus-visible:ring-[var(--accent)] ${
+                  className={`inline-flex min-h-11 min-w-11 items-center justify-center rounded-[1px] px-2.5 text-[11px] font-semibold tracking-[0.06em] uppercase transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-6 sm:min-h-0 sm:min-w-0 sm:px-2 ${
                     settings.mode === 'px'
                       ? 'bg-[var(--accent)] text-[var(--accent-fg)]'
                       : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
@@ -195,16 +195,16 @@ export function ControlBar({
             </div>
 
             {settings.mode === 'percent' ? (
-              <div className="flex items-center gap-2.5">
+              <div className="flex flex-wrap items-center gap-2.5">
                 <label
-                  className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] font-medium tracking-[0.04em] text-[var(--text-secondary)] uppercase select-none hover:text-[var(--text-primary)]"
+                  className="inline-flex min-h-11 cursor-pointer items-center gap-1.5 px-1 text-[11px] font-medium tracking-[0.04em] text-[var(--text-secondary)] uppercase select-none hover:text-[var(--text-primary)] sm:min-h-7 sm:px-0"
                   title="Allow enlarging images up to 200% (may cause blurriness)"
                 >
                   <input
                     type="checkbox"
                     checked={unlockUpscale}
                     onChange={(e) => handleToggleUnlockUpscale(e.target.checked)}
-                    className="size-3.5 cursor-pointer rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] accent-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                    className="size-4 cursor-pointer rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] accent-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:size-3.5"
                   />
                   <span>Unlock &gt;100%</span>
                 </label>
@@ -221,7 +221,7 @@ export function ControlBar({
                     onChange={handleScaleInput}
                     onBlur={(e) => commitScale(e.target.value)}
                     onKeyDown={handleScaleKeyDown}
-                    className="h-7 w-16 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] px-2 text-right text-sm font-semibold tabular-nums text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent-border)] focus:ring-1 focus:ring-[var(--accent)]"
+                    className="min-h-11 w-16 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] px-2 text-right text-sm font-semibold tabular-nums text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent-border)] focus:ring-1 focus:ring-[var(--accent)] sm:h-7 sm:min-h-0"
                   />
                   <span className="text-xs font-medium text-[var(--text-muted)]">%</span>
                 </div>
@@ -232,7 +232,7 @@ export function ControlBar({
                   htmlFor="max-width-input"
                   className="text-[11px] font-medium tracking-[0.04em] text-[var(--text-secondary)] uppercase"
                 >
-                  Max Width (px)
+                  Max Width
                 </label>
                 <input
                   id="max-width-input"
@@ -245,7 +245,7 @@ export function ControlBar({
                   onChange={handleMaxWidthInput}
                   onBlur={(e) => commitMaxWidth(e.target.value)}
                   onKeyDown={handleMaxWidthKeyDown}
-                  className="h-7 w-20 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] px-2 text-right text-sm font-semibold tabular-nums text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent-border)] focus:ring-1 focus:ring-[var(--accent)]"
+                  className="min-h-11 w-20 rounded-[2px] border border-[var(--border-strong)] bg-[var(--bg-surface-alt)] px-2 text-right text-sm font-semibold tabular-nums text-[var(--text-primary)] outline-none transition-colors focus:border-[var(--accent-border)] focus:ring-1 focus:ring-[var(--accent)] sm:h-7 sm:min-h-0"
                 />
                 <span className="text-xs font-medium text-[var(--text-muted)]">px</span>
               </div>
@@ -253,8 +253,24 @@ export function ControlBar({
           </div>
 
           {settings.mode === 'percent' ? (
-            <div className="flex items-center gap-3">
-              <div className="flex shrink-0 gap-1" role="group" aria-label="Scale presets">
+            <div className="flex flex-col gap-2.5">
+              <div className="flex min-h-11 items-center sm:min-h-7">
+                <input
+                  type="range"
+                  aria-label="Resize percentage"
+                  min={MIN_SCALE}
+                  max={effectiveMaxScale}
+                  step={1}
+                  value={clamp(settings.scale, MIN_SCALE, effectiveMaxScale)}
+                  style={buildRangeStyle(settings.scale, MIN_SCALE, effectiveMaxScale)}
+                  onChange={(e) => {
+                    setScaleDraft(null);
+                    onSettingsChange({ scale: Number(e.target.value) });
+                  }}
+                  className="w-full touch-pan-y"
+                />
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Scale presets">
                 {SCALE_PRESETS.map((preset) => {
                   const active = settings.scale === preset;
                   return (
@@ -266,7 +282,7 @@ export function ControlBar({
                         setScaleDraft(null);
                         onSettingsChange({ scale: preset });
                       }}
-                      className={`h-7 rounded-[2px] border px-2.5 text-xs tabular-nums transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                      className={`inline-flex min-h-11 min-w-11 flex-1 items-center justify-center rounded-[2px] border px-2.5 text-xs whitespace-nowrap tabular-nums transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-7 sm:min-h-0 sm:min-w-0 sm:flex-initial ${
                         active
                           ? 'border-[var(--accent-border)] bg-[var(--accent)] font-semibold text-[var(--accent-fg)]'
                           : 'border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
@@ -277,24 +293,10 @@ export function ControlBar({
                   );
                 })}
               </div>
-              <input
-                type="range"
-                aria-label="Resize percentage"
-                min={MIN_SCALE}
-                max={effectiveMaxScale}
-                step={1}
-                value={clamp(settings.scale, MIN_SCALE, effectiveMaxScale)}
-                style={buildRangeStyle(settings.scale, MIN_SCALE, effectiveMaxScale)}
-                onChange={(e) => {
-                  setScaleDraft(null);
-                  onSettingsChange({ scale: Number(e.target.value) });
-                }}
-                className="min-w-0 flex-1"
-              />
             </div>
           ) : (
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex shrink-0 gap-1" role="group" aria-label="Max width presets">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label="Max width presets">
                 {WIDTH_PRESETS.map((preset) => {
                   const active = settings.maxWidth === preset;
                   return (
@@ -306,7 +308,7 @@ export function ControlBar({
                         setMaxWidthDraft(null);
                         onSettingsChange({ maxWidth: preset });
                       }}
-                      className={`h-7 rounded-[2px] border px-2 text-xs tabular-nums transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                      className={`inline-flex min-h-11 min-w-11 flex-1 items-center justify-center rounded-[2px] border px-2 text-xs whitespace-nowrap tabular-nums transition-colors outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] sm:h-7 sm:min-h-0 sm:min-w-0 sm:flex-initial ${
                         active
                           ? 'border-[var(--accent-border)] bg-[var(--accent)] font-semibold text-[var(--accent-fg)]'
                           : 'border-[var(--border-subtle)] bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'
@@ -325,8 +327,8 @@ export function ControlBar({
         </div>
 
         {/* Quality */}
-        <div className="min-w-0">
-          <div className="mb-2 flex items-center justify-between">
+        <div className="min-w-0 flex flex-col justify-between gap-2.5">
+          <div className="flex min-h-7 items-center justify-between gap-2">
             <label htmlFor="quality-input" className={sectionLabel}>
               WebP quality
             </label>
@@ -334,7 +336,7 @@ export function ControlBar({
               {settings.quality}%
             </span>
           </div>
-          <div className="flex h-7 items-center">
+          <div className="flex min-h-11 items-center sm:min-h-7">
             <input
               id="quality-input"
               type="range"
@@ -344,14 +346,18 @@ export function ControlBar({
               value={settings.quality}
               style={buildRangeStyle(settings.quality, MIN_QUALITY, MAX_QUALITY)}
               onChange={(e) => onSettingsChange({ quality: Number(e.target.value) })}
-              className="w-full"
+              className="w-full touch-pan-y"
             />
+          </div>
+          <div className="flex items-center justify-between text-[11px] tracking-[0.02em] text-[var(--text-muted)]">
+            <span>Smaller file</span>
+            <span>Higher fidelity</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 rounded-b-[2px] border-t border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
-        <label className="flex min-w-0 cursor-pointer items-center gap-2.5 text-xs text-[var(--text-secondary)]">
+      <div className="flex flex-col gap-3 rounded-b-[2px] border-t border-[var(--border-subtle)] bg-[var(--bg-surface-alt)] px-3.5 py-3 sm:px-4 md:flex-row md:items-center md:justify-between">
+        <label className="flex min-h-11 min-w-0 cursor-pointer items-center gap-2.5 text-xs text-[var(--text-secondary)] sm:min-h-8">
           <span className="relative inline-flex shrink-0 items-center">
             <input
               type="checkbox"
@@ -365,31 +371,31 @@ export function ControlBar({
           <span className="shrink-0 tracking-[0.04em] text-[var(--text-primary)] uppercase">
             Scale suffix
           </span>
-          <code className="truncate rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-0.5 font-mono text-xs text-[var(--text-muted)]">
+          <code className="min-w-0 truncate rounded-[2px] border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-1.5 py-0.5 font-mono text-xs text-[var(--text-muted)]">
             {exampleName}
           </code>
         </label>
 
-        <div className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
+        <div className="flex flex-wrap items-center gap-2 md:flex-nowrap">
           <button
             type="button"
             onClick={onClearAll}
             disabled={totalCount === 0}
-            className={`${btnBase} border border-transparent text-[var(--text-secondary)] hover:border-[var(--status-error-border)] hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)] disabled:text-[var(--text-muted)] disabled:opacity-50`}
+            className={`${btnBase} flex-1 sm:flex-initial border border-transparent text-[var(--text-secondary)] hover:border-[var(--status-error-border)] hover:bg-[var(--status-error-bg)] hover:text-[var(--status-error-text)] disabled:text-[var(--text-muted)] disabled:opacity-50`}
           >
-            <Trash2 className="size-4" aria-hidden />
+            <Trash2 className="size-4 shrink-0" aria-hidden />
             Clear All
           </button>
           <button
             type="button"
             onClick={onConvertAll}
             disabled={convertCount === 0}
-            className={`${primaryBtn} ${isProcessing ? 'disabled:bg-[var(--accent)]/60 disabled:text-[var(--accent-fg)]' : primaryDisabled}`}
+            className={`${primaryBtn} flex-1 sm:flex-initial ${isProcessing ? 'disabled:bg-[var(--accent)]/60 disabled:text-[var(--accent-fg)]' : primaryDisabled}`}
           >
             {isProcessing ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
+              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
             ) : (
-              <Zap className="size-4" aria-hidden />
+              <Zap className="size-4 shrink-0" aria-hidden />
             )}
             {isProcessing && convertCount === 0 ? `Converting… ${activeJobs} left` : 'Convert All'}
             {convertCount > 0 && (
@@ -402,12 +408,12 @@ export function ControlBar({
             type="button"
             onClick={onDownloadAll}
             disabled={doneCount === 0 || isZipping}
-            className={`${primaryBtn} ${isZipping ? 'disabled:bg-[var(--accent)]/60 disabled:text-[var(--accent-fg)]' : primaryDisabled}`}
+            className={`${primaryBtn} w-full min-[480px]:w-auto min-[480px]:flex-1 sm:flex-initial ${isZipping ? 'disabled:bg-[var(--accent)]/60 disabled:text-[var(--accent-fg)]' : primaryDisabled}`}
           >
             {isZipping ? (
-              <Loader2 className="size-4 animate-spin" aria-hidden />
+              <Loader2 className="size-4 shrink-0 animate-spin" aria-hidden />
             ) : (
-              <Download className="size-4" aria-hidden />
+              <Download className="size-4 shrink-0" aria-hidden />
             )}
             {isZipping ? 'Zipping…' : doneCount > 1 ? 'Download All (.zip)' : 'Download'}
           </button>
